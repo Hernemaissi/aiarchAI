@@ -27,11 +27,11 @@ public class NotRandomBot implements Player {
 	}
 	
 	public Move move(Situation situation, int timeLeft) {
-		System.out.println("Beginning to think move!");
+	
 		currentNode = new Node(0, situation, null, null);
-		System.out.println("Expanding tree");
+
 		expandTree(situation, currentNode);
-		System.out.println("Expanded tree");
+
 		for (int i = 0; i < currentNode.getChildren().size(); i++) {
 			Node child = currentNode.getChildren().get(i);
 			expandTree(situation, child);
@@ -43,9 +43,9 @@ public class NotRandomBot implements Player {
 	
 	
 	private void expandTree(Situation situation, Node node) {
-		System.out.println("Now in expandTree method");
+
 		List<Move> moves = situation.legal();
-		System.out.println("Movelist obtained");
+
 		ArrayList<Node> children = new ArrayList<Node>();
 		Situation newSituation = null;
 		for (int i = 0; i <moves.size(); i++) {
@@ -83,13 +83,13 @@ public class NotRandomBot implements Player {
 			score++;
 			ownPieces.iterator().next();
 		}
-		System.out.println("Just after while loop");
+	
 		Iterable<Board.Square> enemyPieces = board.pieces(this.side.opposite());
 		for (Board.Square s : enemyPieces) {
 			score--;
 			enemyPieces.iterator().next();
 		}
-		System.out.println("Out of heuristic");
+
 		return score;
 	}
 	
