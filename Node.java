@@ -93,5 +93,16 @@ public class Node {
 		}
 		return lowestNode;
 	}
+	
+	
+	//Finds the child that matches the situation
+	public Node findChild(Situation situation) {
+		for (int i = 0; i < this.children.size(); i++) {
+			if (situation == this.children.get(i).getSituation()) {
+				return this.children.get(i);
+			}
+		}
+		return null;
+	}
 
 }
