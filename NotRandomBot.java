@@ -34,7 +34,7 @@ public class NotRandomBot implements Player {
 			this.currentNode = new Node(0, situation, null, null);
 			System.out.println("Had to create new tree");
 		} else {
-			this.currentNode.findChild(situation);
+			this.currentNode = this.currentNode.findChild(situation);
 		}
 		
 		createTree(RECURSIONDEPTH, this.currentNode);

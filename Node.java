@@ -1,6 +1,7 @@
 package notrandombot;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Random;
 
 import fi.zem.aiarch.game.hierarchy.Move;
@@ -97,8 +98,9 @@ public class Node {
 	
 	//Finds the child that matches the situation
 	public Node findChild(Situation situation) {
+		BitSet hashed = situation.encode(null);
 		for (int i = 0; i < this.children.size(); i++) {
-			if (situation == this.children.get(i).getSituation()) {
+			if (hashed.equals(this.children.get(i).getSituation().encode(null))) {
 				return this.children.get(i);
 			}
 		}
