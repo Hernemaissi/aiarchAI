@@ -18,6 +18,8 @@ public class NotRandomBot implements Player {
 		this.visitedStates = new BitSet[5];
 		this.index = 0;
 		this.currentNode = null;
+		this.bestMove = null;
+		this.moveNumber = 1;
 	}
 
 	public void start(Engine engine, Side side) {
@@ -30,27 +32,18 @@ public class NotRandomBot implements Player {
 						+ situation.getTurn());
 		//System.out.println("The situation now: " + situation);
 		
-		if (this.currentNode == null || this.currentNode.findChild(situation) == null) {
-			this.currentNode = new Node(0, situation, null, null);
-			System.out.println("Had to create new tree");
-		} else {
-			this.currentNode = this.currentNode.findChild(situation);
-		}
-		
-		createTree(RECURSIONDEPTH, this.currentNode);
-		System.out.println("Created tree");
-		maxMove(situation, RECURSIONDEPTH, 500, -500, this.currentNode);
-		Node chosen = this.currentNode.getHighestChild();
-		
-		this.currentNode = chosen;
-		
+		System.out.println("Move number: " + this.moveNumber);
+
+		int score = maxMove(situation, RECURSIONDEPTH, -500, 500);
+
 
 		// System.out.println("Chosen situtation: " + chosen.getSituation());
-		System.out.println("Chosen move: " + chosen.getMove());
-		System.out.println("had score" + chosen.getScore());
+		System.out.println("Chosen move: " + this.bestMove);
+		System.out.println("had score: " + score);
 
-		storeEncodedState(chosen.getSituation().encode(null));
-		return chosen.getMove();
+		storeEncodedState(situation.copyApply(bestMove).encode(null));
+		this.moveNumber++;
+		return this.bestMove;
 	}
 
 	private void expandTree(Situation situation, Node node, boolean log) {
@@ -111,34 +104,34 @@ public class NotRandomBot implements Player {
 		}
 	}
 	
-	private int minMove(Situation situation, int depth, int alpha, int beta, Node node) {
+	private int minMove(Situation situation, int depth, int alpha, int beta) {
 		//End condition, finished state should actually be in the heuristics to make this cleaner
 		if (situation.isFinished()) {
 			if (situation.getWinner() == this.side) {
-				node.setScore(Integer.MAX_VALUE);
+				return Integer.MAX_VALUE;
 			} else if (situation.getWinner() == this.side.opposite()) {
-				node.setScore(Integer.MIN_VALUE);
+				return Integer.MIN_VALUE;
 			} else {
-				node.setScore(0);
+				return 0;
 			}
-			return node.getScore();
 		}
 		
 		if (depth == 0) {
-			node.setScore(heuristicScore(situation));
-			return node.getScore();
+			return heuristicScore(situation);
 		}
 		
 		int lowestScore = Integer.MAX_VALUE;
-		ArrayList<Node> children = (ArrayList<Node>) node.getChildren();
-		for (int i = 0; i<children.size(); i++) {
-			Node child = children.get(i);
-			Situation newSit = situation.copyApply(child.getMove());
-			int score = maxMove(newSit, depth - 1, alpha, beta, child);
+		ArrayList<Move> moves = (ArrayList<Move>) situation.legal();
+		for (int i = 0; i<moves.size(); i++) {
+			Move move = moves.get(i);
+			Situation newSit = situation.copyApply(move);
+			int score = maxMove(newSit, depth - 1, alpha, beta);
 			if (score < lowestScore) {
 				lowestScore = score;
 				beta = score;
-				node.setScore(lowestScore);
+				if (depth == RECURSIONDEPTH) {
+					this.bestMove = move;
+				}
 			}
 			
 			if (beta <= alpha) {
@@ -148,32 +141,32 @@ public class NotRandomBot implements Player {
 		return lowestScore;
 	}
 	
-	private int maxMove(Situation situation, int depth, int alpha, int beta, Node node) {
+	private int maxMove(Situation situation, int depth, int alpha, int beta) {
 		//End condition
 		if (situation.isFinished()) {
 			if (situation.getWinner() == this.side) {
-				node.setScore(Integer.MAX_VALUE);
+				return Integer.MAX_VALUE;
 			} else if (situation.getWinner() == this.side.opposite()) {
-				node.setScore(Integer.MIN_VALUE);
+				return Integer.MIN_VALUE;
 			} else {
-				node.setScore(0);
+				return 0;
 			}
-			return node.getScore();
 		}
 		if (depth == 0) {
-			node.setScore(heuristicScore(situation));
-			return node.getScore();
+			return heuristicScore(situation);
 		}
 		int highestScore = Integer.MIN_VALUE;
-		ArrayList<Node> children = (ArrayList<Node>) node.getChildren();
-		for (int i = 0; i<children.size(); i++) {
-			Node child = children.get(i);
-			Situation newSit = situation.copyApply(child.getMove());
-			int score = minMove(newSit, depth - 1, alpha, beta, child);
-			if (score < highestScore) {
+		ArrayList<Move> moves = (ArrayList<Move>) situation.legal();
+		for (int i = 0; i<moves.size(); i++) {
+			Move move = moves.get(i);
+			Situation newSit = situation.copyApply(move);
+			int score = minMove(newSit, depth - 1, alpha, beta);
+			if (score > highestScore) {
 				highestScore = score;
 				alpha = score;
-				node.setScore(highestScore);
+				if (depth == RECURSIONDEPTH) {
+					this.bestMove = move;
+				}
 			}
 			
 			if (beta <= alpha) {
@@ -239,5 +232,7 @@ public class NotRandomBot implements Player {
 	private BitSet[] visitedStates;
 	private int index;
 	private static final int MAXINDEX = 4;
-	private static final int RECURSIONDEPTH = 4;
+	private static final int RECURSIONDEPTH = 5;
+	private Move bestMove;
+	private int moveNumber;
 }
