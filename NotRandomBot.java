@@ -30,7 +30,7 @@ public class NotRandomBot implements Player {
 		System.out
 				.println("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!Move! It's time for: "
 						+ situation.getTurn());
-		//System.out.println("The situation now: " + situation);
+		System.out.println("The situation now: " + situation);
 		
 		System.out.println("Move number: " + this.moveNumber);
 
@@ -120,13 +120,13 @@ public class NotRandomBot implements Player {
 			return heuristicScore(situation);
 		}
 		
-		int lowestScore = Integer.MAX_VALUE;
+		Integer lowestScore = null;
 		ArrayList<Move> moves = (ArrayList<Move>) situation.legal();
 		for (int i = 0; i<moves.size(); i++) {
 			Move move = moves.get(i);
 			Situation newSit = situation.copyApply(move);
 			int score = maxMove(newSit, depth - 1, alpha, beta);
-			if (score < lowestScore) {
+			if (lowestScore == null || score < lowestScore) {
 				lowestScore = score;
 				beta = score;
 				if (depth == RECURSIONDEPTH) {
@@ -155,13 +155,13 @@ public class NotRandomBot implements Player {
 		if (depth == 0) {
 			return heuristicScore(situation);
 		}
-		int highestScore = Integer.MIN_VALUE;
+		Integer highestScore = null;
 		ArrayList<Move> moves = (ArrayList<Move>) situation.legal();
 		for (int i = 0; i<moves.size(); i++) {
 			Move move = moves.get(i);
 			Situation newSit = situation.copyApply(move);
 			int score = minMove(newSit, depth - 1, alpha, beta);
-			if (score > highestScore) {
+			if (highestScore == null || score > highestScore) {
 				highestScore = score;
 				alpha = score;
 				if (depth == RECURSIONDEPTH) {
@@ -233,6 +233,8 @@ public class NotRandomBot implements Player {
 	private int index;
 	private static final int MAXINDEX = 4;
 	private static final int RECURSIONDEPTH = 5;
+	private static final int MAXVALUE = 10000;
+	private static final int MINVALUE = -10000;
 	private Move bestMove;
 	private int moveNumber;
 }
