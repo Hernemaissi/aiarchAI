@@ -106,5 +106,10 @@ public class Node {
 		}
 		return null;
 	}
+	
+	  @Override
+	  public String toString() {
+	    return "[Node for move:\n" + this.move + "\nwith score: "+ this.score  + "]";
+	  }
 
 }

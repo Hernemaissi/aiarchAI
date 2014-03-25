@@ -7,9 +7,11 @@ import java.util.Comparator;
 import java.util.Random;
 
 import fi.zem.aiarch.game.hierarchy.Board;
+import fi.zem.aiarch.game.hierarchy.Coord;
 import fi.zem.aiarch.game.hierarchy.Engine;
 import fi.zem.aiarch.game.hierarchy.Move;
 import fi.zem.aiarch.game.hierarchy.MoveType;
+import fi.zem.aiarch.game.hierarchy.Piece;
 import fi.zem.aiarch.game.hierarchy.Player;
 import fi.zem.aiarch.game.hierarchy.Side;
 import fi.zem.aiarch.game.hierarchy.Situation;
@@ -21,26 +23,38 @@ public class NotRandomBot implements Player {
 		this.currentNode = null;
 		this.bestMove = null;
 		this.moveNumber = 1;
+		this.attack = 1000;
+		this.attackFirepower = 100;
+		this.moves = 10;
+		this.boardHeight = 0;
+		this.boardWidth = 0;
 	}
 
 	public void start(Engine engine, Side side) {
 		this.side = side;
 		this.maxPieceValue = engine.getMaxPiece();
+		this.boardHeight = engine.getBoardHeight();
+		this.boardWidth = engine.getBoardWidth();
+	}
+
+	public void setValues(int attack, int attackFirepower, int moves) {
+		this.attack = attack;
+		this.attackFirepower = attackFirepower;
+		this.moves = moves;
 	}
 
 	public Move move(Situation situation, int timeLeft) {
-		System.out
-				.println("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!Move! It's time for: "
-						+ situation.getTurn());
-		System.out.println("The situation now: " + situation);
-
-		System.out.println("Move number: " + this.moveNumber);
+//		System.out
+//				.println("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!Move! It's time for: "
+//						+ situation.getTurn());
+//		System.out.println("The situation now: " + situation);
+//		System.out.println("Move number: " + this.moveNumber);
 
 		int score = maxMove(situation, RECURSIONDEPTH, -500, 500);
 
 		// System.out.println("Chosen situtation: " + chosen.getSituation());
-		System.out.println("Chosen move: " + this.bestMove);
-		System.out.println("had score: " + score);
+//		System.out.println("Chosen move: " + this.bestMove);
+//		System.out.println("had score: " + score);
 
 		storeEncodedState(situation.copyApply(bestMove).encode(null));
 		this.moveNumber++;
@@ -113,7 +127,7 @@ public class NotRandomBot implements Player {
 		Integer lowestScore = null;
 		ArrayList<Node> moves = sortLegalMoves(situation,
 				(ArrayList<Move>) situation.legal());
-		
+
 		for (int i = 0; i < moves.size(); i++) {
 			Move move = moves.get(i).getMove();
 			int score = maxMove(moves.get(i).getSituation(), depth - 1, alpha,
@@ -164,68 +178,153 @@ public class NotRandomBot implements Player {
 		ArrayList<Node> nodes = new ArrayList<Node>();
 		for (int i = 0; i < moves.size(); i++) {
 			Move move = moves.get(i);
+//			System.out.println("The move: " + move);
 			Situation newSituation = situation.copyApply(move);
 			Board board = newSituation.getBoard();
 			int score = 0;
 
 			if (move.getType() == MoveType.PASS) {
-				System.out.println("The situation now: " + situation);
 
-				System.out.println("^^^^^^^ MOVE TYPE PASS! score -1000: ");
-				score = -10000;
+				score = -100000;
 			} else {
-				// this side attacks
-				
-				if (newSituation.getAttacker(this.side) != null) {
-					//prefer higher piece value
-					score += 100 * (board.get(newSituation.getTarget(this.side))
-							.getValue());
-					//prefer pieces outside of opponent home area
-					if(board.owner(newSituation.getTarget(this.side)) != this.side.opposite()) {
-						score += 10 * board.get(newSituation.getTarget(this.side))
-								.getValue();
+				Side currentSide = situation.getTurn();
+//				System.out.println("The new situation now: " + newSituation);
+//				System.out.println("^^^^^^^ CURRENT SIDE! " + currentSide);
+
+				if (newSituation.getAttacker(currentSide) != null) {
+					if (this.attack != 0) { // TODO only for debugging
+						// prefer higher piece value
+						score += this.attack
+								* (board.get(newSituation
+										.getTarget(currentSide)).getValue());
 					}
-					//prefer higher firepower
-					score += 20 * board.firepower(this.side.opposite(), newSituation.getTarget(this.side));
-					
+					// don't take into account for now, too many moving
+					// variables
+					// prefer pieces outside of opponent home area
+					// if (board.owner(newSituation.getTarget(currentSide)) !=
+					// currentSide
+					// .opposite()) {
+					// score += 10 * board.get(
+					// newSituation.getTarget(currentSide))
+					// .getValue();
+					// }
+					// prefer higher firepower
+					if (this.attackFirepower != 0) { // TODO only for debugging
+						score += this.attackFirepower
+								* board.firepower(currentSide.opposite(),
+										newSituation.getTarget(currentSide));
+					}
+
 				}
+//				System.out.println("^^^^^^^ attack! " + score);
 				// opposite side attacks
-				if (newSituation.getAttacker(this.side.opposite()) != null) {
-					score -= 100 * (board.get(newSituation.getTarget(this.side.opposite()))
-							.getValue());
-					//prefer pieces outside of opponent home area
-					if(board.owner(newSituation.getTarget(this.side.opposite())) != this.side) {
-						score -= 10 * board.get(newSituation.getTarget(this.side.opposite()))
-								.getValue();
+
+				if (newSituation.getAttacker(currentSide.opposite()) != null) {
+					if (this.attack != 0) { // TODO only for debugging
+						score -= this.attack
+								* (board.get(newSituation.getTarget(currentSide
+										.opposite())).getValue());
+
+						// don't take into account for now, too many moving
+						// variables
+						// prefer pieces outside of opponent home area
+						// if (board.owner(newSituation.getTarget(currentSide
+						// .opposite())) != currentSide) {
+						// score -= 10 * board.get(
+						// newSituation.getTarget(currentSide
+						// .opposite())).getValue();
 					}
-					//prefer higher firepower
-					score -= 20 * board.firepower(this.side, newSituation.getTarget(this.side.opposite()));
-					
+
+					if (this.attackFirepower != 0) { // TODO only for debugging
+						// prefer higher firepower
+						score -= this.attackFirepower
+								* board.firepower(currentSide, newSituation
+										.getTarget(currentSide.opposite()));
+					}
 				}
-				
-				
-//				if (move.getType() == MoveType.MOVE) {
-//					score +=  * board.firepower(this.side.opposite(), newSituation.getTarget(this.side));
-//				}
+
+//				System.out.println("^^^^^^^ opposite attack! " + score);
+
+				if (this.moves != 0) { // TODO only for debugging
+					if (move.getType() == MoveType.MOVE) {
+						score += this.moves
+								* (calculateFirePower(newSituation,
+										currentSide, move.getTo()) - calculateFirePower(
+										situation, currentSide, move.getFrom()));
+
+//						System.out.println("^^^^^^^ move! " + score);
+					}
+				}
 			}
 
 			nodes.add(new Node(score, newSituation, null, move));
 		}
 
+		// System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^SORTING^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		// System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^SORTING^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		// System.out.println("UNSORTED????????");
+		// for (int i = 0; i < nodes.size(); i++) {
+		// System.out.println(nodes.get(i));
+		// }
+
+		// sort values based on score
 		Collections.sort(nodes, new Comparator<Node>() {
 			public int compare(Node n1, Node n2) {
-				return n1.getScore() - n2.getScore();
+				return n2.getScore() - n1.getScore();
 			}
 		});
-
+		// randomize only highest values
 		Collections.shuffle(nodes.subList(0, getHighestNodeIndex(nodes) + 1));
-		//
-		//
-		// for (int i = 0; i < moves.size(); i++) {
-		//
-		//
+
+		// System.out.println("SORTED and randomized highest scores!!!!!!!!");
+		// for (int i = 0; i < nodes.size(); i++) {
+		// System.out.println(nodes.get(i));
 		// }
+		// System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^END SORTING^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+		// System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^END SORTING^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+
 		return nodes;
+	}
+
+	private int calculateFirePower(Situation situation, Side currentSide,
+			Coord coord) {
+		Board board = situation.getBoard();
+		int value = (board.owner(coord) == currentSide) ? 0 : board.firepower(
+				currentSide, coord);
+		if (coord.getX() != 0) {
+			int x = coord.getX() - 1;
+			int y = coord.getY();
+			if (board.get(x, y) != null && board.owner(x, y) != currentSide
+					&& board.get(x, y).getSide() == currentSide) {
+				value += board.firepower(currentSide, x, y);
+			}
+		}
+		if (coord.getX() != this.boardWidth - 1) {
+			int x = coord.getX() + 1;
+			int y = coord.getY();
+			if (board.get(x, y) != null && board.owner(x, y) != currentSide
+					&& board.get(x, y).getSide() == currentSide) {
+				value += board.firepower(currentSide, x, y);
+			}
+		}
+		if (coord.getY() != 0) {
+			int x = coord.getX();
+			int y = coord.getY() - 1;
+			if (board.get(x, y) != null && board.owner(x, y) != currentSide
+					&& board.get(x, y).getSide() == currentSide) {
+				value += board.firepower(currentSide, x, y);
+			}
+		}
+		if (coord.getY() != this.boardHeight - 1) {
+			int x = coord.getX();
+			int y = coord.getY() + 1;
+			if (board.get(x, y) != null && board.owner(x, y) != currentSide
+					&& board.get(x, y).getSide() == currentSide) {
+				value += board.firepower(currentSide, x, y);
+			}
+		}
+//		System.out.println("^^^^^^^ calcfire! " + currentSide + " " + value);
+		return value;
 	}
 
 	// returns the last index of the highest score in list
@@ -307,4 +406,9 @@ public class NotRandomBot implements Player {
 	private Move bestMove;
 	private int moveNumber;
 	private int maxPieceValue;
+	private int attack;
+	private int attackFirepower;
+	private int moves;
+	private int boardHeight;
+	private int boardWidth;
 }
