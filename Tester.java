@@ -16,6 +16,12 @@ import fi.zem.aiarch.game.hierarchy.Side;
 import fi.zem.aiarch.game.hierarchy.Situation;
 
 public class Tester {
+	
+	private static final int RANDOM_BOT_ROUNDS = 0;
+	
+	
+	private static final int HINAAJA_ROUNDS = 10;
+	private static final int TOTAL_ROUNDS = HINAAJA_ROUNDS * 5;
 
 	/**
 	 * @param args
@@ -38,7 +44,7 @@ public class Tester {
 		int draws = 0;
 
 		System.out.println("NotRandom VS Random");
-		for (int i = 0; i < 0; i++) {
+		for (int i = 0; i < RANDOM_BOT_ROUNDS; i++) {
 			List<Situation> situations = Runner.log(engine, blue, red);
 			Side winner = situations.get(situations.size()-1).getWinner();
 
@@ -59,11 +65,11 @@ public class Tester {
 		notRandomWins = 0;
 		draws = 0;
 		int hinaajaPiecesLeft = 0;
-		int iterations = 1;
 		int moves = 0;
+		String valueStr = "ALL VALUES";
 		
 		
-		for (int i = 0; i < iterations; i++) {
+		for (int i = 0; i < TOTAL_ROUNDS; i++) {
 			List<Situation> situations = Runner.log(engine, blue, betterRed);
 			Side winner = situations.get(situations.size()-1).getWinner();
 			System.out.println(situations.get(situations.size()-1));
@@ -73,7 +79,7 @@ public class Tester {
 			} else if (winner == Side.RED) {
 				hinaajaWins++;
 				Iterable<Square> pices = situations.get(situations.size()-1).getBoard().pieces(Side.BLUE);
-				moves = situations.get(situations.size()-1).getMoves();
+				moves += situations.get(situations.size()-1).getMoves();
 				for (Board.Square s : pices) {
 					hinaajaPiecesLeft++;
 				}
@@ -81,146 +87,49 @@ public class Tester {
 			} else {
 				draws++;
 			}
-		}
-		
-		result = result + "\n\n\nNotRandom VS Hinaaja ALL VALUES \nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
-		result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / iterations;
-		result = result + "\nAverage moves against Hinaaja: " + moves / iterations;
-
-
-		((NotRandomBot) blue).setValues(0, 0, 0);
-		notRandomWins = 0;
-		hinaajaWins = 0;
-		draws = 0;
-		hinaajaPiecesLeft = 0;
-		moves = 0;
-		
-		for (int i = 0; i < iterations; i++) {
-			List<Situation> situations = Runner.log(engine, blue, betterRed);
-			Side winner = situations.get(situations.size()-1).getWinner();
-//			System.out.println(situations.get(situations.size()-1));
-
-			if (winner == Side.BLUE) {
-				notRandomWins++;
-			} else if (winner == Side.RED) {
-				hinaajaWins++;
-				Iterable<Square> pices = situations.get(situations.size()-1).getBoard().pieces(Side.BLUE);
-				moves = situations.get(situations.size()-1).getMoves();
-				for (Board.Square s : pices) {
-					hinaajaPiecesLeft++;
-				}
+			if ((i + 1) % 10 == 0) {
 				
-			} else {
-				draws++;
+				result = result + "\n\n\nNotRandom VS Hinaaja " + valueStr + " \nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
+				result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / HINAAJA_ROUNDS;
+				result = result + "\nAverage moves against Hinaaja: " + moves / HINAAJA_ROUNDS;
+
+
+				valueStr = setValues(i+1, blue);
+				notRandomWins = 0;
+				hinaajaWins = 0;
+				draws = 0;
+				hinaajaPiecesLeft = 0;
+				moves = 0;
 			}
 		}
-		
-		result = result + "\n\n\nNotRandom VS Hinaaja VALUES 0 0 0\nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
-		result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / iterations;
-		result = result + "\nAverage moves against Hinaaja: " + moves / iterations;
-		
-
-
-		((NotRandomBot) blue).setValues(10, 0, 0);
-		notRandomWins = 0;
-		hinaajaWins = 0;
-		draws = 0;
-		hinaajaPiecesLeft = 0;
-		moves = 0;
-		
-		for (int i = 0; i < iterations; i++) {
-			List<Situation> situations = Runner.log(engine, blue, betterRed);
-			Side winner = situations.get(situations.size()-1).getWinner();
-//			System.out.println(situations.get(situations.size()-1));
-
-			if (winner == Side.BLUE) {
-				notRandomWins++;
-			} else if (winner == Side.RED) {
-				hinaajaWins++;
-				Iterable<Square> pices = situations.get(situations.size()-1).getBoard().pieces(Side.BLUE);
-				moves = situations.get(situations.size()-1).getMoves();
-				for (Board.Square s : pices) {
-					hinaajaPiecesLeft++;
-				}
-				
-			} else {
-				draws++;
-			}
-		}
-		
-		result = result + "\n\n\nNotRandom VS Hinaaja VALUES 10 0 0\nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
-		result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / iterations;
-		result = result + "\nAverage moves against Hinaaja: " + moves / iterations;
-		
-
-		((NotRandomBot) blue).setValues(0, 10, 0);
-		notRandomWins = 0;
-		hinaajaWins = 0;
-		draws = 0;
-		hinaajaPiecesLeft = 0;
-		moves = 0;
-		
-		for (int i = 0; i < iterations; i++) {
-			List<Situation> situations = Runner.log(engine, blue, betterRed);
-			Side winner = situations.get(situations.size()-1).getWinner();
-//			System.out.println(situations.get(situations.size()-1));
-
-			if (winner == Side.BLUE) {
-				notRandomWins++;
-			} else if (winner == Side.RED) {
-				hinaajaWins++;
-				Iterable<Square> pices = situations.get(situations.size()-1).getBoard().pieces(Side.BLUE);
-				moves = situations.get(situations.size()-1).getMoves();
-				for (Board.Square s : pices) {
-					hinaajaPiecesLeft++;
-				}
-				
-			} else {
-				draws++;
-			}
-		}
-		
-		result = result + "\n\n\nNotRandom VS Hinaaja VALUES 0 10 0\nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
-		result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / iterations;
-		result = result + "\nAverage moves against Hinaaja: " + moves / iterations;
-		
-		
-		
-
-		((NotRandomBot) blue).setValues(0, 0, 10);
-		notRandomWins = 0;
-		hinaajaWins = 0;
-		draws = 0;
-		hinaajaPiecesLeft = 0;
-		moves = 0;
-		
-		for (int i = 0; i < iterations; i++) {
-			List<Situation> situations = Runner.log(engine, blue, betterRed);
-			Side winner = situations.get(situations.size()-1).getWinner();
-			System.out.println(situations.get(situations.size()-1));
-
-			if (winner == Side.BLUE) {
-				notRandomWins++;
-			} else if (winner == Side.RED) {
-				hinaajaWins++;
-				Iterable<Square> pices = situations.get(situations.size()-1).getBoard().pieces(Side.BLUE);
-				moves = situations.get(situations.size()-1).getMoves();
-				for (Board.Square s : pices) {
-					hinaajaPiecesLeft++;
-				}
-				
-			} else {
-				draws++;
-			}
-		}
-		
-		result = result + "\n\n\nNotRandom VS Hinaaja VALUES 0 0 10\nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
-		result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / iterations;
-		result = result + "\nAverage moves against Hinaaja: " + moves / iterations;
-		
-		
+	
 		System.out.println(result);
 
+	}
+	
+	private static String setValues(int interval, Player blue) {
+		String result = "";
+		switch(interval) {
+		case 10:
+			((NotRandomBot) blue).setValues(0, 0, 0);
+			result = "0 0 0";
+			break;
+		case 20:
+			((NotRandomBot) blue).setValues(10, 0, 0);
+			result = "10 0 0";
+			break;
+		case 30:
+			((NotRandomBot) blue).setValues(0, 10, 0);
+			result = "0 10 0";
+			break;
+		case 40:
+			((NotRandomBot) blue).setValues(0, 0, 10);
+			result = "0 0 10";
+			break;
+		default:
+			break;
+		}
+		return result;
 	}
 
 }
