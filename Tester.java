@@ -5,6 +5,8 @@ import hinaaja.Hinaaja;
 import java.util.List;
 import java.util.Random;
 
+import botdufromage.BotDuFromage;
+
 import randombot.RandomBot;
 
 import fi.zem.aiarch.engine.hierarchy.HierarchyEngine;
@@ -22,6 +24,8 @@ public class Tester {
 	
 	private static final int HINAAJA_ROUNDS = 10;
 	private static final int TOTAL_ROUNDS = HINAAJA_ROUNDS * 5;
+	private static final HierarchyEngine SMALL_BOARD = new HierarchyEngine(5,5,3);
+	private static final HierarchyEngine NORMAL_BOARD = new HierarchyEngine(9,9,6);
 
 	/**
 	 * @param args
@@ -34,7 +38,8 @@ public class Tester {
 		Player blue = new NotRandomBot(rnd);
 		Player red = new RandomBot(rnd);
 		Player betterRed = new Hinaaja(rnd);
-		HierarchyEngine engine = new HierarchyEngine(5,5,3);
+		betterRed = new BotDuFromage(rnd);
+		HierarchyEngine engine = SMALL_BOARD;
 
 		System.out.println("Bots created!");
 		
@@ -66,6 +71,7 @@ public class Tester {
 		draws = 0;
 		int hinaajaPiecesLeft = 0;
 		int moves = 0;
+		int test_nmr = 0;
 		String valueStr = "ALL VALUES";
 		
 		
@@ -87,14 +93,14 @@ public class Tester {
 			} else {
 				draws++;
 			}
-			if ((i + 1) % 10 == 0) {
+			if ((i + 1) % HINAAJA_ROUNDS == 0) {
 				
 				result = result + "\n\n\nNotRandom VS Hinaaja " + valueStr + " \nStats: \nNotRandomBot: " + notRandomWins + "\nHinaaja: " + hinaajaWins + "\nDraws: " + draws;
 				result = result + "\nAverage Hinaajapieces left: " + hinaajaPiecesLeft / HINAAJA_ROUNDS;
 				result = result + "\nAverage moves against Hinaaja: " + moves / HINAAJA_ROUNDS;
-
-
-				valueStr = setValues(i+1, blue);
+				
+				test_nmr++;
+				valueStr = setValues(test_nmr, blue);
 				notRandomWins = 0;
 				hinaajaWins = 0;
 				draws = 0;
@@ -110,19 +116,19 @@ public class Tester {
 	private static String setValues(int interval, Player blue) {
 		String result = "";
 		switch(interval) {
-		case 10:
+		case 1:
 			((NotRandomBot) blue).setValues(0, 0, 0);
 			result = "0 0 0";
 			break;
-		case 20:
+		case 2:
 			((NotRandomBot) blue).setValues(10, 0, 0);
 			result = "10 0 0";
 			break;
-		case 30:
+		case 3:
 			((NotRandomBot) blue).setValues(0, 10, 0);
 			result = "0 10 0";
 			break;
-		case 40:
+		case 4:
 			((NotRandomBot) blue).setValues(0, 0, 10);
 			result = "0 0 10";
 			break;
