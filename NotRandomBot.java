@@ -23,9 +23,10 @@ public class NotRandomBot implements Player {
 		this.currentNode = null;
 		this.bestMove = null;
 		this.moveNumber = 1;
-		this.attack = 1000;
-		this.attackFirepower = 100;
-		this.moves = 10;
+		this.attackWeight = 1000;
+		this.attackFirepowerWeight = 100;
+		this.moveWeight = 10;
+		this.homeareaWeight = 10;
 		this.boardHeight = 0;
 		this.boardWidth = 0;
 	}
@@ -37,24 +38,25 @@ public class NotRandomBot implements Player {
 		this.boardWidth = engine.getBoardWidth();
 	}
 
-	public void setValues(int attack, int attackFirepower, int moves) {
-		this.attack = attack;
-		this.attackFirepower = attackFirepower;
-		this.moves = moves;
+	public void setValues(int attack, int homearea, int attackFirepower,
+			int moves) {
+		this.attackWeight = attack;
+		this.attackFirepowerWeight = attackFirepower;
+		this.moveWeight = moves;
+		this.homeareaWeight = homearea;
 	}
 
 	public Move move(Situation situation, int timeLeft) {
-//		System.out
-//				.println("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!Move! It's time for: "
-//						+ situation.getTurn());
-//		System.out.println("The situation now: " + situation);
-//		System.out.println("Move number: " + this.moveNumber);
+		 System.out
+		 .println("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!Move! It's time for: "
+		 + situation.getTurn());
+		 System.out.println("The situation now: " + situation);
+		 System.out.println("Move number: " + this.moveNumber);
 
 		int score = maxMove(situation, RECURSIONDEPTH, -500, 500);
 
-		// System.out.println("Chosen situtation: " + chosen.getSituation());
-//		System.out.println("Chosen move: " + this.bestMove);
-//		System.out.println("had score: " + score);
+		 System.out.println("Chosen move: " + this.bestMove);
+		 System.out.println("had score: " + score);
 
 		storeEncodedState(situation.copyApply(bestMove).encode(null));
 		this.moveNumber++;
@@ -178,86 +180,10 @@ public class NotRandomBot implements Player {
 		ArrayList<Node> nodes = new ArrayList<Node>();
 		for (int i = 0; i < moves.size(); i++) {
 			Move move = moves.get(i);
-//			System.out.println("The move: " + move);
+			// System.out.println("The move: " + move);
 			Situation newSituation = situation.copyApply(move);
-			Board board = newSituation.getBoard();
-			int score = 0;
-
-			if (move.getType() == MoveType.PASS) {
-
-				score = -100000;
-			} else {
-				Side currentSide = situation.getTurn();
-//				System.out.println("The new situation now: " + newSituation);
-//				System.out.println("^^^^^^^ CURRENT SIDE! " + currentSide);
-
-				if (newSituation.getAttacker(currentSide) != null) {
-					if (this.attack != 0) { // TODO only for debugging
-						// prefer higher piece value
-						score += this.attack
-								* (board.get(newSituation
-										.getTarget(currentSide)).getValue());
-					}
-					// don't take into account for now, too many moving
-					// variables
-					// prefer pieces outside of opponent home area
-					// if (board.owner(newSituation.getTarget(currentSide)) !=
-					// currentSide
-					// .opposite()) {
-					// score += 10 * board.get(
-					// newSituation.getTarget(currentSide))
-					// .getValue();
-					// }
-					// prefer higher firepower
-					if (this.attackFirepower != 0) { // TODO only for debugging
-						score += this.attackFirepower
-								* board.firepower(currentSide.opposite(),
-										newSituation.getTarget(currentSide));
-					}
-
-				}
-//				System.out.println("^^^^^^^ attack! " + score);
-				// opposite side attacks
-
-				if (newSituation.getAttacker(currentSide.opposite()) != null) {
-					if (this.attack != 0) { // TODO only for debugging
-						score -= this.attack
-								* (board.get(newSituation.getTarget(currentSide
-										.opposite())).getValue());
-
-						// don't take into account for now, too many moving
-						// variables
-						// prefer pieces outside of opponent home area
-						// if (board.owner(newSituation.getTarget(currentSide
-						// .opposite())) != currentSide) {
-						// score -= 10 * board.get(
-						// newSituation.getTarget(currentSide
-						// .opposite())).getValue();
-					}
-
-					if (this.attackFirepower != 0) { // TODO only for debugging
-						// prefer higher firepower
-						score -= this.attackFirepower
-								* board.firepower(currentSide, newSituation
-										.getTarget(currentSide.opposite()));
-					}
-				}
-
-//				System.out.println("^^^^^^^ opposite attack! " + score);
-
-				if (this.moves != 0) { // TODO only for debugging
-					if (move.getType() == MoveType.MOVE) {
-						score += this.moves
-								* (calculateFirePower(newSituation,
-										currentSide, move.getTo()) - calculateFirePower(
-										situation, currentSide, move.getFrom()));
-
-//						System.out.println("^^^^^^^ move! " + score);
-					}
-				}
-			}
-
-			nodes.add(new Node(score, newSituation, null, move));
+			nodes.add(new Node(getSortingScore(situation, newSituation, move),
+					newSituation, null, move));
 		}
 
 		// System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^SORTING^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
@@ -284,6 +210,105 @@ public class NotRandomBot implements Player {
 		// System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^END SORTING^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 
 		return nodes;
+	}
+
+	private int getSortingScore(Situation situation, Situation newSituation,
+			Move move) {
+		Board board = newSituation.getBoard();
+		int score = 0;
+
+		if (move.getType() == MoveType.PASS) {
+			return -100000;
+		} else {
+			Side currentSide = situation.getTurn();
+			// System.out.println("The new situation now: " + newSituation);
+			// System.out.println("^^^^^^^ CURRENT SIDE! " + currentSide);
+
+			if (newSituation.getAttacker(currentSide) != null) {
+				if (this.attackWeight != 0) { // TODO only for debugging
+					if (board.get(newSituation.getTarget(currentSide))
+							.getValue() == this.maxPieceValue) {
+						return Integer.MAX_VALUE;
+					}
+					// prefer higher piece value
+					score += this.attackWeight
+							* (board.get(newSituation.getTarget(currentSide))
+									.getValue());
+
+					// System.out.println("^^^^^^^ ATTACK! " + score);
+				}
+				// don't take into account for now, too many moving
+				// variables
+				// prefer pieces outside of opponent home area
+				if (this.homeareaWeight != 0) {
+					if (board.owner(newSituation.getTarget(currentSide)) != currentSide
+							.opposite()) {
+						score += this.homeareaWeight
+								* board.get(newSituation.getTarget(currentSide))
+										.getValue();
+					}
+				}
+				// prefer higher firepower
+				if (this.attackFirepowerWeight != 0) { // TODO only for
+														// debugging
+					score += this.attackFirepowerWeight
+							* board.firepower(currentSide.opposite(),
+									newSituation.getTarget(currentSide));
+
+					// System.out.println("^^^^^^^ FIREPOWER! " + score);
+				}
+
+			}
+			// System.out.println("^^^^^^^ attack! " + score);
+			// opposite side attacks
+
+			if (newSituation.getAttacker(currentSide.opposite()) != null) {
+				if (this.attackWeight != 0) { // TODO only for debugging
+					if (board.get(newSituation.getTarget(currentSide.opposite()))
+							.getValue() == this.maxPieceValue) {
+						return Integer.MIN_VALUE;
+					}
+					score -= this.attackWeight
+							* (board.get(newSituation.getTarget(currentSide
+									.opposite())).getValue());
+
+					// don't take into account for now, too many moving
+					// variables
+					// prefer pieces outside of opponent home area
+					if (this.homeareaWeight != 0) {
+						if (board.owner(newSituation.getTarget(currentSide
+								.opposite())) != currentSide) {
+							score -= this.homeareaWeight
+									* board.get(
+											newSituation.getTarget(currentSide
+													.opposite())).getValue();
+						}
+					}
+
+					if (this.attackFirepowerWeight != 0) { // TODO only for
+															// debugging
+						// prefer higher firepower
+						score -= this.attackFirepowerWeight
+								* board.firepower(currentSide, newSituation
+										.getTarget(currentSide.opposite()));
+					}
+				}
+			}
+
+			// System.out.println("^^^^^^^ opposite attack! " + score);
+
+			if (this.moveWeight != 0) { // TODO only for debugging
+				if (move.getType() == MoveType.MOVE) {
+					score += this.moveWeight
+							* (calculateFirePower(newSituation, currentSide,
+									move.getTo()) - calculateFirePower(
+									situation, currentSide, move.getFrom()));
+
+					// System.out.println("^^^^^^^ move! " + score);
+				}
+			}
+		}
+		return score;
 	}
 
 	private int calculateFirePower(Situation situation, Side currentSide,
@@ -323,7 +348,7 @@ public class NotRandomBot implements Player {
 				value += board.firepower(currentSide, x, y);
 			}
 		}
-//		System.out.println("^^^^^^^ calcfire! " + currentSide + " " + value);
+		// System.out.println("^^^^^^^ calcfire! " + currentSide + " " + value);
 		return value;
 	}
 
@@ -347,7 +372,21 @@ public class NotRandomBot implements Player {
 			}
 		}
 
+		Board board = situation.getBoard();
 		int score = 0;
+
+		if (situation.getAttacker(this.side) != null) {
+			if (board.get(situation.getTarget(this.side)).getValue() == this.maxPieceValue) {
+				return Integer.MAX_VALUE - 1000;
+			}
+		}
+		// attacked by
+		if (situation.getAttacker(this.side.opposite()) != null) {
+			if (board.get(situation.getTarget(this.side.opposite())).getValue() == this.maxPieceValue) {
+				return Integer.MIN_VALUE;
+			}
+		}
+
 		if (situation.isFinished()) {
 			if (situation.getWinner() == this.side) {
 				score = Integer.MAX_VALUE;
@@ -357,16 +396,15 @@ public class NotRandomBot implements Player {
 			return score;
 		}
 
-		Board board = situation.getBoard();
 		Iterable<Board.Square> ownPieces = board.pieces(this.side);
 		for (Board.Square s : ownPieces) {
-			score += s.getPiece().getValue() * 2;
+			score += 10 * s.getPiece().getValue();
 			ownPieces.iterator().next();
 		}
 
 		Iterable<Board.Square> enemyPieces = board.pieces(this.side.opposite());
 		for (Board.Square s : enemyPieces) {
-			score -= s.getPiece().getValue();
+			score -= 10 * s.getPiece().getValue();
 			enemyPieces.iterator().next();
 		}
 
@@ -406,9 +444,10 @@ public class NotRandomBot implements Player {
 	private Move bestMove;
 	private int moveNumber;
 	private int maxPieceValue;
-	private int attack;
-	private int attackFirepower;
-	private int moves;
+	private int attackWeight;
+	private int attackFirepowerWeight;
+	private int homeareaWeight;
+	private int moveWeight;
 	private int boardHeight;
 	private int boardWidth;
 }
